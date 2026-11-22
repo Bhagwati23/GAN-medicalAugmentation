@@ -1,346 +1,161 @@
-# GAN-medicalAugmentation
+# Does Synthetic Data Help? GAN Augmentation for Small Medical Datasets
 
-Evaluating the impact of GAN-generated synthetic medical images on deep learning classification performance.
+**Team 33 · Project P33 · Deep Learning, Sitare University**
 
-## Project Overview
+Medical imaging datasets are small and imbalanced. We train a **class-conditional DCGAN** on the real
+training images of [MedMNIST v2](https://medmnist.com/), add 0 / 50 / 100 / 200 % synthetic images to the
+training set, and measure whether a CNN classifier gets better on a **held-out, purely real test set**.
+We also vary the *quality* of the synthetic data (an early vs. a fully trained generator, scored with FID/KID)
+to separate the effect of **how much** synthetic data is added from **how good** it is.
 
-This project explores the use of Generative Adversarial Networks (GANs) to generate synthetic medical images for data augmentation. We investigate whether GAN-generated synthetic images can improve the performance of deep learning classifiers on medical imaging tasks.
+## Key results
 
-### Research Question
+| | BreastMNIST (546 train images) | PneumoniaMNIST (4,708 train images) |
+|---|---|---|
+| Real-only macro F1 / AUC | **0.812** / 0.911 | **0.861** / 0.973 |
+| Best GAN setting, macro F1 | 0.819 (class balancing, p = 0.74) | 0.855 (+200 %, p = 0.65) |
+| Best AUC | **0.922** (+200 % GAN) | **0.976** (+200 % GAN) |
+| Flip/shift augmentation, F1 | **0.834** (best) | 0.755 (worst — mirrored chests are anatomically wrong) |
+| FID final / early generator (real-vs-real floor) | 86.4 / 134.9 (59.1) | 108.1 / 193.3 (25.3) |
+| Generated images closer to a training image than 95 % of unseen real images (≈5 % expected) | 0 % | 1.9 % |
 
-Can GAN-generated synthetic medical images effectively augment training data and improve classification performance compared to traditional augmentation techniques?
+- **GAN images did not raise macro F1** on either dataset at any amount (50–200 %); no difference is significant over 5 (3) seeds.
+- **Quality matters**: the final generator beats the early one in AUC at every ratio.
+- **+200 % synthetic gives the best AUC** on both datasets, and on PneumoniaMNIST cuts seed-to-seed F1 variance from 0.021 to 0.004.
+- **No memorisation**: the generator does not copy training images (nearest-neighbour check), though sample diversity is limited.
 
-## Project Status
+Full tables: [`results/breastmnist/results_table.md`](results/breastmnist/results_table.md),
+[`results/pneumoniamnist/results_table.md`](results/pneumoniamnist/results_table.md) · report source: [`report/`](report/).
 
-**Issue #1 - Dataset Selection, Preparation and Exploration** - COMPLETED
+<p align="center">
+  <img src="results/breastmnist/fig_metrics_vs_ratio.png" width="95%"><br>
+  <em>BreastMNIST: metrics vs amount of synthetic data — final (blue) vs early (red) generator, grey band = flip/shift.</em>
+</p>
+<p align="center">
+  <img src="results/breastmnist/fig_real_vs_synthetic.png" width="49%">
+  <img src="results/pneumoniamnist/fig_real_vs_synthetic.png" width="49%"><br>
+  <em>Real images vs early and final DCGAN samples (left: breast ultrasound, right: chest X-ray).</em>
+</p>
 
-- Explored BreastMNIST and PneumoniaMNIST from MedMNIST v2
-- Analyzed dataset characteristics, class distributions, and image properties
-- Selected **PneumoniaMNIST** as the primary dataset for GAN experiments
-- Established strict data leakage prevention protocols
-- All 38 unit tests passing on Python 3.12
+## Dataset choice
 
-## Dataset: PneumoniaMNIST
+The Issue #1 exploration (`notebooks/01_dataset_exploration.ipynb`) compared both MedMNIST candidates and picked
+**PneumoniaMNIST** for GAN training because it has 4,708 training images (BreastMNIST: 546). We kept it, and also ran
+the full study on **BreastMNIST**, because a tiny, imbalanced dataset (27 % malignant) is exactly where synthetic data is
+supposed to help most. The report treats BreastMNIST as the main stress test and PneumoniaMNIST as the larger-data check.
+Both use the official MedMNIST train / val / test splits at 28×28.
+Detailed dataset notes (statistics, leakage safeguards, loader usage) from Issue #1: [`docs/DATASET.md`](docs/DATASET.md).
 
-We selected **PneumoniaMNIST** from the MedMNIST v2 collection for this project.
-
-### Dataset Characteristics
-
-- **Total Samples**: 5,856 images
-  - Training: 4,708 images
-  - Validation: 524 images
-  - Test: 624 images
-- **Task**: Binary classification (Normal vs Pneumonia)
-- **Image Size**: 28 × 28 pixels
-- **Channels**: 1 (grayscale)
-- **Modality**: Chest X-ray images
-- **Pixel Range**: [0, 255]
-
-### Why PneumoniaMNIST?
-
-PneumoniaMNIST was selected primarily for practical reasons:
-
-1. **Larger Dataset Size**: 5,856 samples vs 780 in BreastMNIST (7.5× more data)
-2. **More Training Samples**: 4,708 training images enable better GAN training
-3. **Project Requirements**: Sufficient data for GAN experiments and evaluation
-4. **Binary Classification**: Same task complexity as BreastMNIST (2 classes)
-5. **Established Baselines**: Well-documented dataset with existing literature
-
-**Important Caveats**:
-- Clinical suitability for GAN augmentation is not established prior to experiments
-- Class balance and visual pattern quality will be evaluated during the project
-- Dataset selection is based on size and availability, not proven GAN performance
-
-### Dataset Comparison
-
-| Metric | BreastMNIST | PneumoniaMNIST |
-|--------|-------------|----------------|
-| Total Samples | 780 | 5,856 |
-| Train Samples | 546 | 4,708 |
-| Val Samples | 78 | 524 |
-| Test Samples | 156 | 624 |
-| Number of Classes | 2 | 2 |
-| Modality | Breast Ultrasound | Chest X-Ray |
-| Task | Benign vs Malignant | Normal vs Pneumonia |
-
-## Project Structure
-
-```
-GAN-medicalAugmentation/
-│
-├── notebooks/
-│   └── 01_dataset_exploration.ipynb    # Dataset analysis and exploration
-│
-├── src/
-│   ├── __init__.py
-│   └── data/
-│       ├── __init__.py
-│       └── dataset.py                  # Dataset loading utilities
-│
-├── tests/
-│   ├── __init__.py
-│   └── test_dataset.py                 # Unit tests for dataset module
-│
-├── data/
-│   └── .gitkeep                        # Downloaded datasets (not committed)
-│
-├── requirements.txt                    # Python dependencies
-├── README.md                           # This file
-└── .gitignore                          # Git ignore rules
-```
-
-## Installation
-
-### Prerequisites
-
-- Python 3.12 (tested and recommended)
-- pip (Python package manager)
-
-**Note**: This project has been developed and tested exclusively with Python 3.12.10 on Windows. Other Python versions are not verified.
-
-### Setup Instructions
-
-1. **Clone the repository**
+## Interactive demo
 
 ```bash
-git clone https://github.com/Bhagwati23/GAN-medicalAugmentation.git
-cd GAN-medicalAugmentation
+python app.py        # http://127.0.0.1:7860
 ```
 
-2. **Create a virtual environment (Python 3.12)**
+| Tab | What you can do |
+|---|---|
+| 🧬 Generate | Draw synthetic scans of a chosen class from the early or final generator; play a latent-space walk |
+| 🎯 Spot the Fake | A real scan vs a GAN scan — guess which is real, with a running score |
+| 🔬 Classify | Same real test image through Model A (real only) and Model B (real + 100 % GAN) side by side |
+| 📊 Results | Headline cards, the full results table and all figures |
+| 🧭 How it works | The six pipeline steps at a glance |
 
-```powershell
-# Windows PowerShell (tested environment)
-python -m venv .venv312
+## Pipeline
+
+```
+MedMNIST v2 (official train / val / test splits)
+      │
+      ├── train ──► conditional DCGAN ──► G_early (≈10% of training) , G_final
+      │                                        │
+      │                                        ├──► FID / KID vs. real train images
+      │                                        ▼
+      ├── train ──► + synthetic images (0/50/100/200 %, same class ratio, nested subsets)
+      │                │                        + GAN class balancing, + flip/shift baseline
+      │                ▼
+      │           CNN classifier × 5 seeds (best checkpoint by validation AUC)
+      │
+      └── test (real only, never seen by the GAN) ──► accuracy, precision, recall, F1, AUC, confusion matrix
 ```
 
-3. **Install dependencies (no activation required)**
+**No leakage:** the GAN is trained on the training split only; validation and test sets contain only real
+images and are identical in every experiment (enforced in `ganaug/augment.py`, checked in `tests/`).
 
-```powershell
-# Windows PowerShell - Direct executable path
-.\.venv312\Scripts\python.exe -m pip install --upgrade pip
-.\.venv312\Scripts\python.exe -m pip install -r requirements.txt
-```
+## Repository layout
 
-4. **Verify installation**
+| Path | What it does | Issue |
+|---|---|---|
+| `src/data/dataset.py`, `notebooks/01_dataset_exploration.ipynb`, `tests/test_dataset.py`, `docs/DATASET.md` | MedMNIST loaders, split-overlap (leakage) checks, dataset exploration | #1 |
+| `ganaug/config.py`, `ganaug/data.py` | Shared paths/seeds; tensors in [-1, 1] built on the #1 loaders, random-shift helper | #2 |
+| `ganaug/cnn.py`, `ganaug/classifier.py` | CNN classifier, training with best-val-AUC selection, metrics | #2 |
+| `ganaug/dcgan.py` | Conditional DCGAN generator and discriminator | #3 |
+| `ganaug/train_gan.py` | GAN training loop (DiffAugment-style translation, label smoothing), checkpoints, samples | #4 |
+| `ganaug/augment.py`, `ganaug/explore.py` | Mixes real and synthetic images at controlled ratios; dataset overview figure | #5 |
+| `ganaug/fid.py` | FID / KID of generated images (torch-fidelity) | #6 |
+| `ganaug/experiments.py`, `ganaug/report.py` | All settings × seeds, comparison tables and figures | #7 |
+| `run_all.sh`, `tests/test_pipeline.py`, `app.py`, `.github/` | End-to-end run, pipeline tests, demo web app, CI | #8 |
+| `report/` | LaTeX source (ELCVIA template), figures and the final PDF | #9 |
+| `results/` | Every number and figure used in the report | |
 
-```powershell
-.\.venv312\Scripts\python.exe verify_installation.py
-```
+## Setup
 
-**Alternative (with activation)**:
+Python 3.10+; runs on CPU, no GPU needed (BreastMNIST end to end: about 1–2 hours on a laptop; PneumoniaMNIST: about 3 hours).
 
-```powershell
-# Activate virtual environment
-.\.venv312\Scripts\Activate.ps1
-
-# Install dependencies
-pip install --upgrade pip
+```bash
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-
-# Verify installation
-python verify_installation.py
+python verify_installation.py      # checks the installed packages
+pytest -q                          # 43 tests: dataset/leakage checks (#1) + pipeline tests
 ```
 
-### Required Packages
+## Reproduce
 
-- **Data Science**: numpy, pandas, matplotlib, seaborn, scikit-learn
-- **Medical Imaging**: medmnist (v2.2.0+)
-- **Deep Learning**: torch, torchvision (CPU version)
-- **Development**: jupyter, ipykernel, pytest
-
-See `requirements.txt` for complete list with version specifications.
-
-## Usage
-
-### Dataset Loading
-
-```python
-from src.data.dataset import (
-    load_pneumonia_mnist,
-    load_full_dataset,
-    get_training_data_only,
-    get_dataset_statistics
-)
-
-# Load a specific split
-train_images, train_labels = load_pneumonia_mnist(split='train', download=True)
-
-# Load all splits at once
-all_data = load_full_dataset('pneumoniamnist', download=True)
-train_images, train_labels = all_data['train']
-val_images, val_labels = all_data['val']
-test_images, test_labels = all_data['test']
-
-# Get ONLY training data (for GAN training - excludes test data)
-gan_train_images, gan_train_labels = get_training_data_only(
-    'pneumoniamnist',
-    download=True,
-    include_val=False  # Set to True to include validation data
-)
-
-# Get dataset statistics
-stats = get_dataset_statistics(train_images, train_labels)
-print(f"Number of samples: {stats['num_samples']}")
-print(f"Class distribution: {stats['class_distribution']}")
+```bash
+bash run_all.sh                    # both datasets, end to end
 ```
 
-### Running the Exploration Notebook
+or step by step:
 
-**Note**: Notebook execution has not been verified in the current environment.
-
-1. **Start Jupyter**
-
-```powershell
-.\.venv312\Scripts\jupyter.exe notebook
+```bash
+python -m ganaug.explore                                        # dataset stats  -> results/dataset_*.{json,png}
+python -m ganaug.train_gan  --dataset breastmnist --epochs 300 --early-epoch 30
+python -m ganaug.fid        --dataset breastmnist               # -> results/breastmnist/fid.json
+python -m ganaug.experiments --dataset breastmnist --seeds 0 1 2 3 4
+python -m ganaug.report     --dataset breastmnist               # figures + results_table.{md,tex}
 ```
 
-2. **Open the exploration notebook**
+Data is downloaded automatically into `data/`; generator checkpoints go to `checkpoints/` (both git-ignored).
 
-Navigate to `notebooks/01_dataset_exploration.ipynb`
+### GAN training runs and checkpoints
 
-3. **Expected notebook contents**
+The GAN was trained twice with the same code, configuration and seed, on two different laptops:
 
-The notebook is designed to:
-- Download both BreastMNIST and PneumoniaMNIST datasets
-- Display comprehensive statistics and visualizations
-- Compare both datasets
-- Demonstrate reproducibility
-- Verify test-set isolation
+| | Run 1 (Arjun) | Run 2 (Bhagwati) |
+|---|---|---|
+| Used for | Every number and figure in the report (FID, F1/AUC tables, all plots) | Reproducibility check (report §6.1) |
+| Loss log | `results/<dataset>/report_run/gan_losses.csv` | `results/<dataset>/gan_losses.csv`, `gan_samples/` |
+| Checkpoints | [checkpoints (report run)](https://drive.google.com/file/d/1JHWhWtQJ8be1L8MP2bBrhAI6I45mLU8O/view?usp=sharing) | shared in the team Drive |
+| Final D loss (avg. last 10 % of epochs) | Breast 1.371 · Pneumonia 1.376 | Breast 1.377 · Pneumonia 1.377 |
 
-### Running Tests
+Both runs reach the same balanced state (D(x) ≈ D(G(z)) ≈ 0.45). They are not bit-identical, because CPU
+floating-point results differ slightly across machines and library versions. To reproduce the report's numbers without
+retraining, unzip the report-run checkpoints into the repo root (`checkpoints/breastmnist/G_early.pt`, `G_final.pt`,
+`checkpoints/pneumoniamnist/...`), then run `ganaug.fid`, `ganaug.experiments` and `ganaug.report`.
 
-```powershell
-# Windows PowerShell (tested environment)
-# Run all tests
-.\.venv312\Scripts\python.exe -m pytest tests/ -v
+## Team
 
-# Run specific test file
-.\.venv312\Scripts\python.exe -m pytest tests/test_dataset.py -v
-
-# Run with coverage report (if pytest-cov is installed)
-.\.venv312\Scripts\python.exe -m pytest tests/ --cov=src --cov-report=html
-```
-
-All 38 tests pass on Python 3.12.10.
-
-## Data Leakage Prevention
-
-**CRITICAL**: This project implements strict protocols to prevent data leakage:
-
-### Test Data Isolation
-
-- Test data is ONLY used for final model evaluation
-- Test data is NEVER used for:
-  - GAN training
-  - Synthetic image generation
-  - Model selection
-  - Hyperparameter tuning
-  - Training set augmentation
-
-### Official Split Usage
-
-We preserve MedMNIST's official train/validation/test splits:
-
-- **Training Split**: Used for GAN training and generating synthetic images
-- **Validation Split**: Used for model selection and hyperparameter tuning
-- **Test Split**: Reserved exclusively for final performance evaluation
-
-### Split Separation Verification
-
-Our verification checks use SHA-256 hashing to detect pixel-identical images across splits:
-
-- Zero train-test overlaps detected
-- 8 pixel-identical train-val images found (0.17% of training data)
-
-**Important Limitation**: SHA-256 pixel-level duplicate checking can only detect identical images. It cannot verify patient-level separation (i.e., whether different images come from the same patient). MedMNIST documentation should be consulted for patient-level de-identification guarantees.
-
-### Code Safeguards
-
-The `get_training_data_only()` function explicitly excludes test data:
-
-```python
-# This function ensures test data is never accidentally included
-training_data = get_training_data_only('pneumoniamnist', include_val=False)
-```
-
-## Reproducibility
-
-### Random Seeds
-
-All experiments use a fixed random seed for reproducibility:
-
-```python
-from src.data.dataset import set_random_seed
-
-RANDOM_SEED = 42
-set_random_seed(RANDOM_SEED)
-```
-
-### Dataset Versions
-
-- **MedMNIST Version**: 2.2.0+
-- **Dataset Version**: MedMNIST v2 (official release)
-
-### Verification
-
-Run the reproducibility demonstration:
-
-```python
-from src.data.dataset import demonstrate_reproducibility
-
-result = demonstrate_reproducibility('pneumoniamnist', seed=42, n_samples=5)
-print(f"Reproducible: {result['identical']}")  # Should print True
-```
-
-## Next Steps
-
-1. **Baseline Classifier** (Issue #2)
-   - Train a CNN classifier on original PneumoniaMNIST data
-   - Establish baseline performance metrics
-   - Analyze classification errors
-
-2. **GAN Implementation** (Issue #3)
-   - Implement DCGAN or similar architecture
-   - Train GAN on PneumoniaMNIST training data only
-   - Generate synthetic pneumonia images
-
-3. **Augmented Training** (Issue #4)
-   - Combine real and synthetic training images
-   - Train classifier on augmented dataset
-   - Compare with baseline performance
-
-4. **Evaluation & Analysis** (Issue #5)
-   - Evaluate on held-out test set
-   - Compare baseline vs augmented model
-   - Analyze synthetic image quality
-   - Document findings and conclusions
-
-## Contributing
-
-This is a research project. Contributions are welcome through:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feat/new-feature`)
-3. Commit your changes (`git commit -m 'Add new feature'`)
-4. Push to the branch (`git push origin feat/new-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is for educational and research purposes.
+| Member | Work |
+|---|---|
+| Arjun Kadam | Augmentation pipeline (#5), integration, testing, CI and demo app (#8), report (#9) |
+| Bhagwati | DCGAN architecture (#3) and GAN training (#4); repository owner, team workflow, PR review and merges |
+| Maneesh Sakhwar | Dataset preparation, exploration notebook and leakage tests (#1), FID evaluation (#6) |
+| Anand Singh | CNN baseline (#2), result comparison (#7) |
 
 ## References
 
-- **MedMNIST v2**: Yang, J., Shi, R., Wei, D., Liu, Z., Zhao, L., Ke, B., ... & Ni, B. (2023). MedMNIST v2-A large-scale lightweight benchmark for 2D and 3D biomedical image classification. Scientific Data, 10(1), 41.
-- **MedMNIST Paper**: https://doi.org/10.1038/s41597-022-01721-8
-- **MedMNIST Website**: https://medmnist.com/
-
-## Contact
-
-For questions or issues, please open a GitHub issue in this repository.
-
----
-
-**Last Updated**: November 21, 2026
-**Status**: Dataset exploration completed, ready for baseline classifier implementation
+1. A. Radford, L. Metz, S. Chintala. *Unsupervised Representation Learning with Deep Convolutional GANs.* ICLR 2016. [arXiv:1511.06434](https://arxiv.org/abs/1511.06434)
+2. M. Frid-Adar et al. *GAN-based Synthetic Medical Image Augmentation for Increased CNN Performance in Liver Lesion Classification.* Neurocomputing 2018. [arXiv:1803.01229](https://arxiv.org/abs/1803.01229)
+3. J. Yang et al. *MedMNIST v2: A Large-Scale Lightweight Benchmark for 2D and 3D Biomedical Image Classification.* Scientific Data 2023. [arXiv:2110.14795](https://arxiv.org/abs/2110.14795)
+4. M. Mirza, S. Osindero. *Conditional Generative Adversarial Nets.* 2014. [arXiv:1411.1784](https://arxiv.org/abs/1411.1784)
+5. S. Zhao et al. *Differentiable Augmentation for Data-Efficient GAN Training.* NeurIPS 2020. [arXiv:2006.10738](https://arxiv.org/abs/2006.10738)
+6. M. Heusel et al. *GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium (FID).* NeurIPS 2017. [arXiv:1706.08500](https://arxiv.org/abs/1706.08500)

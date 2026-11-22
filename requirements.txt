@@ -13,7 +13,7 @@ medmnist>=2.2.0
 # Tested on Python 3.12.10, Windows 10/11
 # For GPU support, see: https://pytorch.org/get-started/locally/
 torch>=2.0.0,<2.6.0
-torchvision>=0.15.0,<0.20.0
+torchvision>=0.15.0,<0.21.0
 
 # Jupyter environment
 jupyter>=1.0.0
@@ -26,6 +26,12 @@ pytest-cov>=4.1.0
 
 # Utilities
 tqdm>=4.66.0
+
+# GAN evaluation, statistics and demo app
+torch-fidelity>=0.3.0     # FID and KID of generated images
+scipy>=1.11.0             # Welch t-test between settings
+tabulate>=0.9.0           # Markdown results tables
+gradio>=4.0.0             # demo web app (app.py)
 
 # TESTED ENVIRONMENT (Python 3.12.10 on Windows):
 # numpy==1.26.4
