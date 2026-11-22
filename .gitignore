@@ -152,7 +152,7 @@ activemq-data/
 # Environments
 .env
 .envrc
-.venv
+.venv*/
 env/
 venv/
 ENV/
@@ -221,3 +221,27 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project-specific
+# Downloaded datasets
+data/*.npz
+data/*.csv
+data/*.png
+data/*.jpg
+data/*.jpeg
+!data/.gitkeep
+
+# Generated images and visualizations
+outputs/
+# results/ and report/figures/ are committed: every number and figure in the report comes from them
+
+# Model checkpoints
+models/
+checkpoints/
+*.pth
+*.h5
+*.keras
+
+# Tensorboard logs
+runs/
+logs/
