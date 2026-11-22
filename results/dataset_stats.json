@@ -1,0 +1,66 @@
+{
+  "breastmnist": {
+    "classes": [
+      "malignant",
+      "normal, benign"
+    ],
+    "image_shape": [
+      1,
+      28,
+      28
+    ],
+    "train": {
+      "n": 546,
+      "class_counts": [
+        147,
+        399
+      ]
+    },
+    "val": {
+      "n": 78,
+      "class_counts": [
+        21,
+        57
+      ]
+    },
+    "test": {
+      "n": 156,
+      "class_counts": [
+        42,
+        114
+      ]
+    }
+  },
+  "pneumoniamnist": {
+    "classes": [
+      "normal",
+      "pneumonia"
+    ],
+    "image_shape": [
+      1,
+      28,
+      28
+    ],
+    "train": {
+      "n": 4708,
+      "class_counts": [
+        1214,
+        3494
+      ]
+    },
+    "val": {
+      "n": 524,
+      "class_counts": [
+        135,
+        389
+      ]
+    },
+    "test": {
+      "n": 624,
+      "class_counts": [
+        234,
+        390
+      ]
+    }
+  }
+}
