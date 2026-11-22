@@ -1,0 +1,107 @@
+%**************************************************************************
+%*  Team 33 (P33) -- Deep Learning project report                          *
+%*  Built on the course's ELCVIA LaTeX 2e template (elcvia.sty).           *
+%*  Compile with pdfLaTeX + BibTeX (Overleaf default).                     *
+%**************************************************************************
+
+\documentclass[twoside,a4paper,11pt]{article}
+\usepackage{times}
+\usepackage{elcvia}
+\usepackage[english]{babel}
+
+% Added for this report: PNG figures, booktabs tables, maths, links, page count
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{url}
+\usepackage{lastpage}
+\usepackage[table]{xcolor}
+\usepackage{etoolbox}
+\usepackage{titlesec}
+\usepackage[labelfont={bf,color=brand},font=normalsize]{caption}
+\usepackage[most]{tcolorbox}
+\usepackage{hyperref}
+\graphicspath{{figures/}}
+\setlength{\tabcolsep}{4pt}
+% Float placement: keep figures/tables close to the text that discusses them
+\usepackage{placeins}
+\usepackage[protrusion=true,expansion=false]{microtype}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.75}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+\Urlmuskip=0mu plus 1mu
+\setlength{\emergencystretch}{1.5em} % avoid lines sticking into the margin
+
+% Colour theme (same violet/pink palette as the demo app); sizes follow the template:
+% section 14pt, subsection 12pt, subsubsection 11pt, captions 11pt.
+\definecolor{brand}{HTML}{5B21B6}
+\definecolor{accent}{HTML}{BE185D}
+\definecolor{rowtint}{HTML}{F5F3FF}
+\titleformat*{\section}{\Large\bfseries\color{brand}}
+\titleformat*{\subsection}{\large\bfseries\color{brand}}
+\titleformat*{\subsubsection}{\normalsize\bfseries\color{accent}}
+\hypersetup{colorlinks=true, linkcolor=brand, citecolor=accent, urlcolor=accent}
+\AtBeginEnvironment{table}{\rowcolors{2}{rowtint}{white}}  % shade only tables in table floats, not the title block
+\newtcolorbox{keybox}[1]{enhanced, colback=brand!4, colframe=brand, coltitle=white,
+  colbacktitle=brand, fonttitle=\bfseries, title={#1}, arc=2mm, boxrule=0.8pt, left=6pt, right=6pt}
+
+% Header fields of the template, filled for a course report (not a journal issue)
+%------------------------------------------------------------------
+\newcommand{\vol}{P33}            % project ID
+\newcommand{\num}{Team 33}        % team number
+\setcounter{page}{1}
+\newcommand{\begpag}{\thepage}
+\newcommand{\finpag}{\pageref{LastPage}}
+\newcommand{\yearp}{2026}
+%------------------------------------------------------------------
+% The template's first line names the journal; replace it with the course so the
+% report does not claim to be a published journal article.
+\makeatletter
+\def\@maketitle{%
+    \newpage
+    \thispagestyle{empty}
+    \begin{center}{\small\it Deep Learning Course Project Report, Sitare University, November \yearp}\end{center}
+    \vskip 1.5em
+    \begin{center}
+      {\LARGE\bf \@title \par}
+      \vskip 1.5em
+      {\large \lineskip .5em
+      \begin{tabular}[t]{@{}c@{}}
+         \@author
+      \end{tabular}\par}
+    \end{center}
+    \par}
+\makeatother
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\title{Does Synthetic Data Help? GAN Augmentation for Small Medical Datasets
+\footnote[0]{Correspondence to: su-24022@sitare.org \vspace{0.2cm}}
+\footnote[0]{\noindent Deep Learning course project P33, Team 33. Instructor: Chhavi Sharma}
+\footnote[0]{Code: \url{https://github.com/Bhagwati23/GAN-medicalAugmentation}}
+}
+
+\author{Arjun Kadam$^*$, Bhagwati$^*$, Maneesh Sakhwar$^*$ and Anand Singh$^*$ \\ \\
+\centerline{\small \em $^*$ Department of Computer Science, Sitare University, India} \\
+\centerline{\small \em su-24022@sitare.org, su-24032@sitare.org, su-24068@sitare.org, su-24014@sitare.org} \\ \\
+\centerline{\small Submitted 22 November 2026}
+       }
+
+\begin{document}
+
+\maketitle
+
+\pagestyle{myheadings}
+\markboth{\hfill{\small \it A. Kadam et al. / Deep Learning Project Report, Team 33 (P33), \yearp}\hfill}
+         {\hfill{\small \it A. Kadam et al. / Deep Learning Project Report, Team 33 (P33), \yearp}\hfill}
+\hrulefill
+
+\input{report_content}
+
+\bibliographystyle{unsrt}
+{\small\bibliography{references}}  % references in small type, as in most journals
+
+\end{document}
