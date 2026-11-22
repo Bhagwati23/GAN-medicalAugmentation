@@ -1,0 +1,10 @@
+setting,n_real,n_synthetic,n_total,class0_real,class0_synthetic,class1_real,class1_synthetic
+real,546,0,546,147,0,399,0
+classical,546,0,546,147,0,399,0
+gan_final_50,546,274,820,147,74,399,200
+gan_final_100,546,546,1092,147,147,399,399
+gan_final_200,546,1092,1638,147,294,399,798
+gan_early_50,546,274,820,147,74,399,200
+gan_early_100,546,546,1092,147,147,399,399
+gan_early_200,546,1092,1638,147,294,399,798
+gan_final_balance,546,252,798,147,252,399,0
