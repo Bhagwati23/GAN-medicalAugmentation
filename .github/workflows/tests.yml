@@ -1,0 +1,17 @@
+# Runs the test suite on every push and pull request (same idea as the CPS project's CI).
+name: tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4                     # get the code
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"                      # same Python as the team's tested environment
+          cache: pip                                  # reuse downloaded packages between runs
+      - run: pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu   # CPU-only PyTorch wheels (much smaller)
+      - run: python -m pytest -q tests                # dataset/leakage tests (#1, download MedMNIST) + pipeline shape/determinism tests

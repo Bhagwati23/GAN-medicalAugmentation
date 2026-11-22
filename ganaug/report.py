@@ -180,7 +180,8 @@ def main():
 
     plot_ratio_curves(summary, fid, out_dir / "fig_metrics_vs_ratio.png")
     plot_confusions(json.loads((out_dir / "confusion_matrices.json").read_text()), names, out_dir / "fig_confusion.png")
-    plot_gan_losses(pd.read_csv(out_dir / "gan_losses.csv"), out_dir / "fig_gan_losses.png")
+    losses = out_dir / "report_run" / "gan_losses.csv"  # run 1 = the GAN run whose checkpoints produced every reported number
+    plot_gan_losses(pd.read_csv(losses if losses.exists() else out_dir / "gan_losses.csv"), out_dir / "fig_gan_losses.png")  # fall back to a fresh training log
     plot_real_vs_fake(dataset, names, out_dir / "fig_real_vs_synthetic.png")
     plot_interpolation(dataset, names, out_dir / "fig_interpolation.png")
     write_tables(summary, runs, out_dir)
