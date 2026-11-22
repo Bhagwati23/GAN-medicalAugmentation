@@ -1,0 +1,27 @@
+{
+  "n_real_train": 2000,
+  "n_generated": 2000,
+  "real_train_vs_real_test": {
+    "fid": 25.318321019945984,
+    "kid_mean": 0.0014998292922973632,
+    "kid_std": 0.0007190151373732535
+  },
+  "generator_early": {
+    "epoch": 6,
+    "fid": 193.30383362208934,
+    "kid_mean": 0.23834390163421632,
+    "kid_std": 0.005072131939887794,
+    "median_nn_dist_fake_to_train": 5.491756916046143,
+    "median_nn_dist_test_to_train": 4.439589977264404,
+    "frac_fake_closer_than_test_p5": 0.0
+  },
+  "generator_final": {
+    "epoch": 60,
+    "fid": 108.07207999599643,
+    "kid_mean": 0.13779465198516846,
+    "kid_std": 0.004423796708492035,
+    "median_nn_dist_fake_to_train": 4.57938814163208,
+    "median_nn_dist_test_to_train": 4.439589977264404,
+    "frac_fake_closer_than_test_p5": 0.01899999938905239
+  }
+}
